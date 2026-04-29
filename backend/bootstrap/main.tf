@@ -2,86 +2,85 @@ provider "aws" {
   region = var.region
 }
 
-#creation of S3 bucket
+#creation of S3 bucket for storing artifacts for each environment
 resource "aws_s3_bucket" "dev_artifact_bucket" {
-  bucket = "sohail-artifacts-dev"
+  bucket = "dev-artifact-bucket"
 
   tags = {
-    Name = "sohail-artifacts-dev"
+    Name        = "sohail-artifacts-dev"
     Environment = "dev"
   }
 }
 
 resource "aws_s3_bucket" "qa_artifact_bucket" {
-  bucket = "sohail-artifacts-qa"
+  bucket = "qa-artifact-bucket"
 
-  tags ={
-    Name ="sohail-artifacts-qa"
-    Environment  = "qa"
+  tags = {
+    Name        = "sohail-artifacts-qa"
+    Environment = "qa"
   }
 }
 
 resource "aws_s3_bucket" "prod_artifact_bucket" {
-    bucket = "sohail-artifacts-prod"
+  bucket = "prod-artifact-bucket"
 
-    tags= {
-        Name = "sohail-artifacts-prod"
-        Environment = "prod"
-    }
-  
+  tags = {
+    Name        = "sohail-artifacts-prod"
+    Environment = "prod"
+  }
+
 }
 
-# version enabling for S3 bucket
+# version enabling for S3 bucket 
 resource "aws_s3_bucket_versioning" "dev-bucket-versioning" {
-  bucket = aws_s3_bucket.multi-az-dev-bucket.id
+  bucket = aws_s3_bucket.dev_artifact_bucket.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket_versioning" "qa-bucket-versioning" {
-    bucket = aws_s3_bucket.multi-az-qa-bucket.id
-
-    versioning_configuration {
-      status = "Enabled"
-    }
+  bucket = aws_s3_bucket.qa_artifact_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "prod-bucket-versioning" {
-    bucket = aws_s3_bucket.multi-az-prod-bucket.id
+  bucket = aws_s3_bucket.prod_artifact_bucket.id
 
-    versioning_configuration {
-      status = "Enabled"
-    }
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 #create a KMS key 
 resource "aws_kms_key" "dev_s3_key" {
-  description = "KMS key for dev S3 bucket encryption"
+  description             = "KMS key for dev S3 bucket encryption"
   deletion_window_in_days = 10
-  enable_key_rotation = true
+  enable_key_rotation     = true
 }
 
 
 resource "aws_kms_key" "qa_s3_key" {
-  description = "KMS key for QA S3 bucket encryption"
+  description             = "KMS key for QA S3 bucket encryption"
   deletion_window_in_days = 10
-  enable_key_rotation = true
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "prod_s3_key" {
-  description = "KMS key for PROD S3 bucket encryption"
+  description             = "KMS key for PROD S3 bucket encryption"
   deletion_window_in_days = 10
-  enable_key_rotation = true
+  enable_key_rotation     = true
 }
 
 
 #SSE-KMS Encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "dev_bucket_sse" {
-  bucket = aws_s3_bucket.multi-az-dev-bucket.id
+  bucket = aws_s3_bucket.dev_artifact_bucket.id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      sse_algorithm     = "aws:kms"
       kms_master_key_id = aws_kms_key.dev_s3_key.arn
     }
     bucket_key_enabled = true #reduces KMS API Call cost
@@ -89,22 +88,22 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "dev_bucket_sse" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "qa_bucket_sse" {
-  bucket = aws_s3_bucket.multi-az-qa-bucket.id
+  bucket = aws_s3_bucket.qa_artifact_bucket.id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      sse_algorithm     = "aws:kms"
       kms_master_key_id = aws_kms_key.qa_s3_key.arn
     }
-    bucket_key_enabled = true 
+    bucket_key_enabled = true
   }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "prod_bucket_sse" {
-  bucket = aws_s3_bucket.multi-az-prod-bucket.id
+  bucket = aws_s3_bucket.prod_artifact_bucket.id
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      sse_algorithm     = "aws:kms"
       kms_master_key_id = aws_kms_key.prod_s3_key.arn
     }
     bucket_key_enabled = true
@@ -115,23 +114,23 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "prod_bucket_sse" 
 resource "aws_s3_bucket" "s3_dev_statefile_storeage" {
   bucket = "dev-statefile-storage"
   tags = {
-    Name = "dev-statefile-storage"
-    Environment  = "dev"
+    Name        = "dev-statefile-storage"
+    Environment = "dev"
   }
 }
 
 resource "aws_s3_bucket" "qa_statefile_storage" {
   bucket = "qa-statefile-storage"
   tags = {
-    Name = "QA statefile storage"
-    Environment  = "QA"
+    Name        = "qa-statefile-storage"
+    Environment = "qa"
   }
 }
 
 resource "aws_s3_bucket" "prod_statefile_storage" {
   bucket = "prod-statefile-storage"
   tags = {
-    name = "Prod state file storage"
+    Name        = "prod-statefile-storage"
     Environment = "prod"
   }
 }
@@ -170,9 +169,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "dev_statefile_sse
 #Dynamodb Table for state locking
 
 resource "aws_dynamodb_table" "dev_terraform_state_lock" {
-  name = "dev-terraform-state-lock"
+  name         = "dev-terraform-state-lock"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "LockID"
+  hash_key     = "LockID"
   attribute {
     name = "LockID"
     type = "S"
@@ -186,15 +185,15 @@ resource "aws_dynamodb_table" "dev_terraform_state_lock" {
     enabled = true
   }
   tags = {
-    Name = "dev-terraform-state-lock"
+    Name        = "dev-terraform-state-lock"
     Environment = "dev"
   }
 }
 
 resource "aws_dynamodb_table" "qa_terraform_state_lock" {
-  name = "qa-terraform-state-lock"
+  name         = "qa-terraform-state-lock"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "LockID"
+  hash_key     = "LockID"
 
   attribute {
     name = "LockID"
@@ -209,16 +208,16 @@ resource "aws_dynamodb_table" "qa_terraform_state_lock" {
   }
 
   tags = {
-    Name = "QA-terraform-state-lock"
-    Environment = "QA"
+    Name        = "qa-terraform-state-lock"
+    Environment = "qa"
   }
-  
+
 }
 
 resource "aws_dynamodb_table" "prod_terraform_state_lock" {
-  name = "prod-terraform-state-lock"
+  name         = "prod-terraform-state-lock"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "LockID"
+  hash_key     = "LockID"
 
   attribute {
     name = "LockID"
@@ -231,7 +230,7 @@ resource "aws_dynamodb_table" "prod_terraform_state_lock" {
     enabled = true
   }
   tags = {
-    Name = "Prod-terraform-state-lock"
-    Environment = "Prod"
+    Name        = "prod-terraform-state-lock"
+    Environment = "prod"
   }
 }

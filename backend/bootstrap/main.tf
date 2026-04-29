@@ -3,29 +3,29 @@ provider "aws" {
 }
 
 #creation of S3 bucket
-resource "aws_s3_bucket" "multi-az-dev-bucket" {
-  bucket = "sohail-tfstate-dev"
+resource "aws_s3_bucket" "dev_artifact_bucket" {
+  bucket = "sohail-artifacts-dev"
 
   tags = {
-    Name = "sohail-tfstate-dev"
+    Name = "sohail-artifacts-dev"
     Environment = "dev"
   }
 }
 
-resource "aws_s3_bucket" "multi-az-qa-bucket" {
-  bucket = "sohail-tfstate-qa"
+resource "aws_s3_bucket" "qa_artifact_bucket" {
+  bucket = "sohail-artifacts-qa"
 
   tags ={
-    Name ="sohail-tfstate-qa"
+    Name ="sohail-artifacts-qa"
     Environment  = "qa"
   }
 }
 
-resource "aws_s3_bucket" "multi-az-prod-bucket" {
-    bucket = "sohail-tfstate-prod"
+resource "aws_s3_bucket" "prod_artifact_bucket" {
+    bucket = "sohail-artifacts-prod"
 
     tags= {
-        Name = "sohail-tfstate-prod"
+        Name = "sohail-artifacts-prod"
         Environment = "prod"
     }
   

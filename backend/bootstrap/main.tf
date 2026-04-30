@@ -157,14 +157,7 @@ resource "aws_s3_bucket_versioning" "prod_statefile_versioning" {
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "dev_statefile_sse" {
-  bucket = aws_s3_bucket.s3_dev_statefile_storeage.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
+
 
 # add KMS key encryption for state file buckets
 resource "aws_kms_key" "dev_statefile_key"{

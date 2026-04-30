@@ -112,25 +112,25 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "prod_bucket_sse" 
 
 #S3 bucket for storing terraform state files
 resource "aws_s3_bucket" "s3_dev_statefile_storeage" {
-  bucket = "dev-statefile-storage"
+  bucket = "sohail-tfstate-dev"
   tags = {
-    Name        = "dev-statefile-storage"
+    Name        = "sohail-tfstate-dev"
     Environment = "dev"
   }
 }
 
 resource "aws_s3_bucket" "qa_statefile_storage" {
-  bucket = "qa-statefile-storage"
+  bucket = "sohail-tfstate-qa"
   tags = {
-    Name        = "qa-statefile-storage"
+    Name        = "sohail-tfstate-qa"
     Environment = "qa"
   }
 }
 
 resource "aws_s3_bucket" "prod_statefile_storage" {
-  bucket = "prod-statefile-storage"
+  bucket = "sohail-tfstate-prod"
   tags = {
-    Name        = "prod-statefile-storage"
+    Name        = "sohail-tfstate-prod"
     Environment = "prod"
   }
 }
@@ -163,6 +163,59 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "dev_statefile_sse
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
+  }
+}
+
+# add KMS key encryption for state file buckets
+resource "aws_kms_key" "dev_statefile_key"{
+  description = "KMS key for dev terraform state file bucket"
+  deletion_window_in_days = 10
+  enable_key_rotation = true
+}
+
+resource "aws_kms_key" "qa_statefile_key"{
+  description = "KMS key for qa terraform state file bucket"
+  deletion_window_in_days = 10
+  enable_key_rotation = true
+}
+
+resource "aws_kms_key" "prod_statefile_key"{
+  description = "KMS key for prod terraform state file bucket"
+  deletion_window_in_days = 10
+  enable_key_rotation = true
+}
+
+# SSE for all state file buckets
+resource "aws_s3_bucket_server_side_encryption_configuration" "dev_statefile_sse" {
+  bucket = aws_s3_bucket.s3_dev_statefile_storeage.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.dev_statefile_key.arn
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "qa_statefile_sse" {
+  bucket = aws_s3_bucket.qa_statefile_storage.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.qa_statefile_key.arn
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "prod_statefile_sse" {
+  bucket = aws_s3_bucket.prod_statefile_storage.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.prod_statefile_key.arn
+    }
+    bucket_key_enabled = true
   }
 }
 
